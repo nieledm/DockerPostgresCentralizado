@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine  # Alpine é mais leve
+    container_name: postgres_shared
+    restart: unless-stopped
+    
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ}
+      PGTZ: ${TZ}
+    
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    
+    volumes:
+      # Dados persistentes
+      - ./pgdata:/var/lib/postgresql/data
+      # Scripts de inicialização
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      # Backup
+      - ./backups:/backups
+    
+    # Configurações avançadas de performance
+    command: >
+      postgres
+      -c shared_buffers=${POSTGRES_SHARED_BUFFERS}
+      -c max_connections=${POSTGRES_MAX_CONNECTIONS}
+      -c log_statement=all
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d.log
+    
+    # Health check para monitorar se o banco está saudável
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+    # Limites de recursos (ajuste conforme seu servidor)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    networks:
+      - postgres_network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  postgres_network:
+    driver: bridge
+    name: postgres_shared_network  # Rede fixa para outras apps se conectarem
