@@ -118,10 +118,10 @@ esac
       exit 1
     fi
     echo "⚠️  Restaurando backup: $2"
-    docker exec -i postgres_shared psql -U admin < "$2"
+    docker exec -i postgres_shared psql -U postgres < "$2"
     ;;
   shell)
-    docker exec -it postgres_shared psql -U admin
+    docker exec -it postgres_shared psql -U postgres
     ;;
   create-db)
     if [ -z "$2" ]; then
@@ -129,10 +129,10 @@ esac
       exit 1
     fi
     echo "📦 Criando banco: $2"
-    docker exec -it postgres_shared psql -U admin -c "CREATE DATABASE $2;"
+    docker exec -it postgres_shared psql -U postgres -c "CREATE DATABASE $2;"
     ;;
   list-dbs)
-    docker exec -it postgres_shared psql -U admin -l
+    docker exec -it postgres_shared psql -U postgres -l
     ;;
   *)
     echo "Gestor do PostgreSQL"
