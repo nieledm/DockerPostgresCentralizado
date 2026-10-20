@@ -31,7 +31,12 @@ case "$1" in
     docker-compose logs -f --tail=100
     ;;
   backup)
-    ./backup.sh
+    BACKUP_DIR="./backups"
+    mkdir -p "$BACKUP_DIR"
+    BACKUP_FILE="$BACKUP_DIR/backup_${DB_NAME}_$(date +%Y%m%d_%H%M%S).sql"
+    echo "💾 Realizando backup do banco $DB_NAME..."
+    docker exec -t postgres_shared pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
+    echo "✅ Backup salvo em: $BACKUP_FILE"
     ;;
   restore)
     if [ -z "$2" ]; then
